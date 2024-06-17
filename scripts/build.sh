@@ -89,7 +89,7 @@ abort() {
 trap abort INT TERM
 
 default() {
-    ARCH=x64
+    ARCH=arm64
     RELEASE_TYPE=retail
     MAGISK_VER=stable
     ROOT_SOL=magisk
@@ -540,6 +540,15 @@ fi
 if [ "$REMOVE_AMAZON" ]; then
     rm -f "$WORK_DIR/wsa/$ARCH/apex/"mado*.apex || abort
 fi
+
+echo "Permissions management Netfree and Netspark security certificates"
+sudo mkdir -p "$SYSTEM_MNT/etc/security/cacerts"
+sudo cp -r "../cacerts/"* "$SYSTEM_MNT/etc/security/cacerts/" || abort
+sudo chmod 0755 "$SYSTEM_MNT/etc/security/cacerts/"
+find "../cacerts/" -maxdepth 1 -mindepth 1 -printf '%P\n' | xargs -I placeholder sudo find "$SYSTEM_MNT/etc/security/cacerts/placeholder" -type f -exec chmod 0644 {} \;
+find "../cacerts/" -maxdepth 1 -mindepth 1 -printf '%P\n' | xargs -I placeholder sudo find "$SYSTEM_MNT/etc/security/cacerts/placeholder" -exec chown root:root {} \;
+find "../cacerts/" -maxdepth 1 -mindepth 1 -printf '%P\n' | xargs -I placeholder sudo find "$SYSTEM_MNT/etc/security/cacerts/placeholder" -exec setfattr -n security.selinux -v "u:object_r:system_file:s0" {} \; || abort
+echo -e "Permissions management Netfree and Netspark security certificates done\n"
 
 echo "Removing signature and add scripts"
 rm -rf "${WORK_DIR:?}"/wsa/"$ARCH"/\[Content_Types\].xml "$WORK_DIR/wsa/$ARCH/AppxBlockMap.xml" "$WORK_DIR/wsa/$ARCH/AppxSignature.p7x" "$WORK_DIR/wsa/$ARCH/AppxMetadata" || abort
